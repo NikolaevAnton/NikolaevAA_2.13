@@ -26,7 +26,6 @@ class StorageManager {
     }
     
     //добавить новую задачу в базу данных
-    
     func saveInDB(_ taskName: String) {
         let task = Task(context: persistentContainer.viewContext)
         task.title = taskName
@@ -38,6 +37,29 @@ class StorageManager {
             } catch let error {
                 print(error)
             }
+        }
+    }
+    
+    //удалить задачу из базы данных
+    func removeTaskInDB(_ taskIndex: Int) {
+        persistentContainer.viewContext.delete(taskList[taskIndex])
+        if persistentContainer.viewContext.hasChanges {
+            do {
+                try persistentContainer.viewContext.save()
+            } catch let error {
+                print(error)
+            }
+        }
+        taskList.remove(at: taskIndex)
+    }
+    
+    //изменить задачу в базе данных
+    func changeTaskInDB(task taskName: String, forIndex taskIndex: Int) {
+        taskList[taskIndex].title = taskName
+        do {
+            try persistentContainer.viewContext.save()
+        } catch let error {
+            print(error)
         }
     }
 

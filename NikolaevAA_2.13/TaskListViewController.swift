@@ -50,17 +50,26 @@ class TaskListViewController: UITableViewController {
     }
     
     
-    private func showAlert(with title: String, and message: String) {
+    private func showAlert(with title: String, and message: String, index: Int = 0) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
             guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
-            self.save(task)
+            if index != 0 {
+                self.chahge(task, for: index)
+            }else {
+                self.save(task)
+            }
+            
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
         alert.addAction(saveAction)
         alert.addAction(cancelAction)
         alert.addTextField { textField in
-            textField.placeholder = "New Task"
+            if index != 0  {
+                textField.text = self.tasksString[index]
+            } else {
+                textField.placeholder = "New Task"
+            }
         }
         present(alert, animated: true)
     }
@@ -70,6 +79,12 @@ class TaskListViewController: UITableViewController {
         tasksString.append(taskName)
         let cellIndex = IndexPath(row: tasksString.count - 1, section: 0)
         tableView.insertRows(at: [cellIndex], with: .automatic)
+    }
+    
+    private func chahge(_ taskName: String, for index: Int) {
+        StorageManager.shared.changeTaskInDB(task: taskName, forIndex: index)
+        tasksString[index] = taskName
+        tableView.reloadData()
     }
 }
 
@@ -85,6 +100,21 @@ extension TaskListViewController {
         content.text = task
         cell.contentConfiguration = content
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == UITableViewCell.EditingStyle.delete {
+            tasksString.remove(at: indexPath.row)
+            StorageManager.shared.removeTaskInDB(indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+        }
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let index = indexPath.row
+        showAlert(with: "Изменить задачу", and: "Как именно?", index: index)
+        tableView.deselectRow(at: indexPath, animated: true)
+        
     }
 }
 
